@@ -1,0 +1,13 @@
+# Target labels
+ ELF2UF2Build
+# Source files and their labels
+C:/Users/PP_ju/Documents/GitHub/ese5190-2022-lab2b-esp/lab/02_repl/REPL/build/CMakeFiles/ELF2UF2Build
+C:/Users/PP_ju/Documents/GitHub/ese5190-2022-lab2b-esp/lab/02_repl/REPL/build/CMakeFiles/ELF2UF2Build.rule
+C:/Users/PP_ju/Documents/GitHub/ese5190-2022-lab2b-esp/lab/02_repl/REPL/build/CMakeFiles/ELF2UF2Build-complete.rule
+C:/Users/PP_ju/Documents/GitHub/ese5190-2022-lab2b-esp/lab/02_repl/REPL/build/elf2uf2/src/ELF2UF2Build-stamp/ELF2UF2Build-build.rule
+C:/Users/PP_ju/Documents/GitHub/ese5190-2022-lab2b-esp/lab/02_repl/REPL/build/elf2uf2/src/ELF2UF2Build-stamp/ELF2UF2Build-configure.rule
+C:/Users/PP_ju/Documents/GitHub/ese5190-2022-lab2b-esp/lab/02_repl/REPL/build/elf2uf2/src/ELF2UF2Build-stamp/ELF2UF2Build-download.rule
+C:/Users/PP_ju/Documents/GitHub/ese5190-2022-lab2b-esp/lab/02_repl/REPL/build/elf2uf2/src/ELF2UF2Build-stamp/ELF2UF2Build-install.rule
+C:/Users/PP_ju/Documents/GitHub/ese5190-2022-lab2b-esp/lab/02_repl/REPL/build/elf2uf2/src/ELF2UF2Build-stamp/ELF2UF2Build-mkdir.rule
+C:/Users/PP_ju/Documents/GitHub/ese5190-2022-lab2b-esp/lab/02_repl/REPL/build/elf2uf2/src/ELF2UF2Build-stamp/ELF2UF2Build-patch.rule
+C:/Users/PP_ju/Documents/GitHub/ese5190-2022-lab2b-esp/lab/02_repl/REPL/build/elf2uf2/src/ELF2UF2Build-stamp/ELF2UF2Build-update.rule

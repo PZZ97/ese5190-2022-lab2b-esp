@@ -1,0 +1,13 @@
+# Target labels
+ PioasmBuild
+# Source files and their labels
+C:/Users/PP_ju/Documents/GitHub/ese5190-2022-lab2b-esp/lab/02_repl/REPL/build/pico-sdk/src/rp2_common/cyw43_driver/CMakeFiles/PioasmBuild
+C:/Users/PP_ju/Documents/GitHub/ese5190-2022-lab2b-esp/lab/02_repl/REPL/build/pico-sdk/src/rp2_common/cyw43_driver/CMakeFiles/PioasmBuild.rule
+C:/Users/PP_ju/Documents/GitHub/ese5190-2022-lab2b-esp/lab/02_repl/REPL/build/pico-sdk/src/rp2_common/cyw43_driver/CMakeFiles/PioasmBuild-complete.rule
+C:/Users/PP_ju/Documents/GitHub/ese5190-2022-lab2b-esp/lab/02_repl/REPL/build/pico-sdk/src/rp2_common/cyw43_driver/pioasm/src/PioasmBuild-stamp/PioasmBuild-build.rule
+C:/Users/PP_ju/Documents/GitHub/ese5190-2022-lab2b-esp/lab/02_repl/REPL/build/pico-sdk/src/rp2_common/cyw43_driver/pioasm/src/PioasmBuild-stamp/PioasmBuild-configure.rule
+C:/Users/PP_ju/Documents/GitHub/ese5190-2022-lab2b-esp/lab/02_repl/REPL/build/pico-sdk/src/rp2_common/cyw43_driver/pioasm/src/PioasmBuild-stamp/PioasmBuild-download.rule
+C:/Users/PP_ju/Documents/GitHub/ese5190-2022-lab2b-esp/lab/02_repl/REPL/build/pico-sdk/src/rp2_common/cyw43_driver/pioasm/src/PioasmBuild-stamp/PioasmBuild-install.rule
+C:/Users/PP_ju/Documents/GitHub/ese5190-2022-lab2b-esp/lab/02_repl/REPL/build/pico-sdk/src/rp2_common/cyw43_driver/pioasm/src/PioasmBuild-stamp/PioasmBuild-mkdir.rule
+C:/Users/PP_ju/Documents/GitHub/ese5190-2022-lab2b-esp/lab/02_repl/REPL/build/pico-sdk/src/rp2_common/cyw43_driver/pioasm/src/PioasmBuild-stamp/PioasmBuild-patch.rule
+C:/Users/PP_ju/Documents/GitHub/ese5190-2022-lab2b-esp/lab/02_repl/REPL/build/pico-sdk/src/rp2_common/cyw43_driver/pioasm/src/PioasmBuild-stamp/PioasmBuild-update.rule

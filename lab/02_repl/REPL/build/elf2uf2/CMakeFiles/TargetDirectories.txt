@@ -1,0 +1,5 @@
+C:/Users/PP_ju/Documents/GitHub/ese5190-2022-lab2b-esp/lab/02_repl/REPL/build/elf2uf2/CMakeFiles/elf2uf2.dir
+C:/Users/PP_ju/Documents/GitHub/ese5190-2022-lab2b-esp/lab/02_repl/REPL/build/elf2uf2/CMakeFiles/edit_cache.dir
+C:/Users/PP_ju/Documents/GitHub/ese5190-2022-lab2b-esp/lab/02_repl/REPL/build/elf2uf2/CMakeFiles/rebuild_cache.dir
+C:/Users/PP_ju/Documents/GitHub/ese5190-2022-lab2b-esp/lab/02_repl/REPL/build/elf2uf2/boot_uf2_headers/CMakeFiles/edit_cache.dir
+C:/Users/PP_ju/Documents/GitHub/ese5190-2022-lab2b-esp/lab/02_repl/REPL/build/elf2uf2/boot_uf2_headers/CMakeFiles/rebuild_cache.dir
