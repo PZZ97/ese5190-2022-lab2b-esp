@@ -4,7 +4,7 @@
 // #include "adafruit_qtpy_rp2040.h" 
 #include "hardware/gpio.h"
 #include "register.h"
-
+#include "ws2812.pio.h" // pio0
 #define QTPY_BOOT_PIN 21
 
 #define E_READ 'r'
@@ -16,7 +16,7 @@ void funcRead(){
     VALUE readVal;
     scanf("%x",&address);
     readVal = register_read(address);
-    printf("\n%x",readVal);
+    printf("v%x",readVal);
 }
 void funcWrite(){
     ADDRESS address;
@@ -25,6 +25,7 @@ void funcWrite(){
     getchar();
     scanf("%x",&writeVal);
     register_write(address,writeVal);
+    printf("v%x",writeVal);
 }
 
 // neopixel_set_rgb()
@@ -33,6 +34,7 @@ void funcRGB(){
     scanf("%x",&rgbVal);
     uint32_t grb = ((rgbVal & 0xFF0000) >> 8) | ((rgbVal & 0x00FF00) << 8) | (rgbVal & 0x0000FF);
     pio_sm_put_blocking(pio0, 0, grb << 8u);
+    printf("v%x",rgbVal);
 }
 
 // w+address+" "+value
@@ -48,7 +50,7 @@ int main() {
     gpio_init(QTPY_BOOT_PIN);
     gpio_set_dir(QTPY_BOOT_PIN, GPIO_IN);
     neopixel_init();
-
+    uint8_t event=0;
     while(1>0){
         event= getchar_timeout_us(0);
         if(event==E_READ){
