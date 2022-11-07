@@ -22,9 +22,9 @@ void neopixel_init() {
 }
            
 
-// void neopixel_set_rgb(uint32_t rgb) {
-//     // convert RGB to GRB
-//     uint32_t grb = ((rgb & 0xFF0000) >> 8) | ((rgb & 0x00FF00) << 8) | (rgb & 0x0000FF);
-//     pio_sm_put_blocking(pio0, 0, grb << 8u);
-// }
+void neopixel_set_rgb(uint32_t rgb) {
+    // convert RGB to GRB
+    uint32_t grb = ((rgb & 0xFF0000) >> 8) | ((rgb & 0x00FF00) << 8) | (rgb & 0x0000FF);
+    pio_sm_put_blocking(pio0, 0, grb << 8u);
+}
 

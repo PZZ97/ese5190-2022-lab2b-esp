@@ -25,10 +25,12 @@ class sequencer():
 
     def readIO(self,pin):
         self.ser.write('>'.encode('utf-8'))
-        self.ser.write(QTPY_BOOT_PIN)
-        self.ser.write(b'\n')
-        tmp=self.ser.read(2)
-        self.ser.flushInput()
+        # self.ser.write(str(pin).encode('utf-8'))
+        self.ser.write(b'21\n')
+        # self.ser.write(b'500000A0\n')
+
+        # self.ser.write(21)
+        tmp=self.ser.readline()
         print(tmp)
     # record at a least a few seconds of button input to your RP2040 (in RAM)
     def record(seconds):   #
@@ -53,19 +55,31 @@ class sequencer():
     
     def readREG(self):
         self.ser.write('r'.encode('utf-8'))
-        self.ser.write([0x00,0x00,0x00,0x50])
-        data=self.ser.read(5)
+        self.ser.write([0x50,0x00,0x00,0x00])
+        data=self.ser.readline()
         # self.ser.flushInput()
         # for a in data:
         #     print(a)
+        print("read:")
         print(data)
     def writeREG(self):
         self.ser.write('w'.encode('utf-8'))
-        self.ser.write([0x50,0x00,0x00,0x00])
-        self.ser.write(0x00)
-        self.ser.write([0x66,0x55,0x44,0x33])
-        data=self.ser.read(5)
+        # self.ser.write([0x10,0x00,0x00,0x60])
+        self.ser.write(b'500000A0\n')
+        # self.ser.write(b'\n')
+        # self.ser.write([0x00,0x00,0x03,0x00])
+        self.ser.write(b'12340000\n')
+
+        # self.ser.write(b'\n')
+        # data=self.ser.read(5)
+        data=self.ser.readline()
+        print("write")
         print(data)
+        print(len(data))
+        data=self.ser.readline()
+        # print("write")
+        print(data)
+        print(len(data))
 def selectCOM():
     l_com=[]
     l_comde=[]
@@ -80,11 +94,15 @@ if __name__ =="__main__":
     COM_list=selectCOM()
     # iCOM=int(input())
     # seq=sequencer(COM_list[iCOM])
-    seq=sequencer(COM_list[1])
-    # seq.readIO(21)
+    seq=sequencer(COM_list[0])
+    seq.readIO(21)
     # seq.readIO(21)
     # seq.readREG()
-    seq.writeREG()
+    # seq.writeREG()
+    # x=input()
+    while True:
+        seq.readIO(21)
+        time.sleep(0.5)
     # seq.readREG()
 
     # while True:
