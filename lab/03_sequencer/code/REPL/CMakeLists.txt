@@ -8,7 +8,7 @@ add_executable(flashlight) # CMAKE (target)
 
 pico_generate_pio_header(flashlight ${CMAKE_CURRENT_LIST_DIR}/ws2812.pio OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR}/generated) # PICO SDK (PIO)
 
-target_sources(flashlight PRIVATE main.c) # CMAKE -> C (compiler)
+target_sources(flashlight PRIVATE main.c neopixel.c) # CMAKE -> C (compiler)
 # target_sources(flashlight PRIVATE flashlight.c neopixel.c) # CMAKE -> C (compiler)
 
 target_link_libraries(flashlight PRIVATE pico_stdlib hardware_pio) # CMAKE -> C (linker)
