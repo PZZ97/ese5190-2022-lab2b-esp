@@ -10,6 +10,10 @@
 #define E_READ 'r'
 #define E_WRITE 'w'
 #define E_RGB   'c'
+#define E_READIO    '>'
+
+// default read pin
+uint8_t Pin;
 
 void funcRead(){
     ADDRESS address;
@@ -36,13 +40,26 @@ void funcRGB(){
     pio_sm_put_blocking(pio0, 0, grb << 8u);
     printf("v%x",rgbVal);
 }
-
+void funcInitGpio(){
+    uint8_t Pin;
+    scanf("%d",&Pin);
+    gpio_set_dir(Pin, GPIO_IN);
+}
+uint8_t funcGpioRead(){
+    scanf("%d",&Pin);
+    return gpio_get(Pin);
+}
+uint8_t funcGpioReadDefault(){
+    return gpio_get(Pin);
+}
 // w+address+" "+value
 // r+address
-// c+value      color
+// c+value      color   // PIO function
+// 
 // (DON'T NEED THIS IN C code)b+value      brightness 
 // (DON'T NEED THIS IN C code)#+num        start record num seconds
 //
+
 int main() {
     stdio_init_all();
     while(stdio_usb_connected()!=true);
