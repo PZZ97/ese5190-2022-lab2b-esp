@@ -13,11 +13,7 @@ from functions import selectCOM,mkdir
 # <            read last gpio pin 
 # b+value      set brightness 
 # #+seconds        start record num seconds
-<<<<<<< HEAD
 # p+Pin         Set read pins
-=======
-# $+filename        play the record
->>>>>>> 78a4028933418bc441b0550446884f5de58c9ef1
 QTPY_BOOT_PIN=21
 
 class sequencer():
@@ -50,15 +46,12 @@ class sequencer():
         print(self.ser.read())
 
     def __readIO(self,pin):
-<<<<<<< HEAD
         def sendPin(__pin):
             self.ser.write('<'.encode('utf-8')) # io read identifier
             self.ser.write(str(__pin).encode('utf-8'))
             self.ser.write(b'\n')   # scanf identifier
         sendPin(pin)
-=======
         self.ser.write(b'<') # io read identifier
->>>>>>> 78a4028933418bc441b0550446884f5de58c9ef1
         tmp=self.ser.read(2)
         if tmp==b'':
             return ""
