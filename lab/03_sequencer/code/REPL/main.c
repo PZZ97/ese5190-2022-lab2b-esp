@@ -52,7 +52,7 @@ void funcGpioRead(){
 }
 void funcGpioReadDefault(){
     // gpio_get(Pin);
-    printf("o%d",gpio_get(pin));
+    printf("o%d",gpio_get(Pin));
 }
 // w+address+" "+value
 // r+address

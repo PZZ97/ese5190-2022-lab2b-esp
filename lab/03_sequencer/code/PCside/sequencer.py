@@ -53,12 +53,13 @@ class sequencer():
         s='p'+str(QTPY_BOOT_PIN)
         self.ser.write(s.encode('utf-8'))
         filename= time.strftime("%m%d%H%M%S", time.localtime())  
+        print(filename)
         with open('./records/'+filename+'.txt', 'w') as self.file:
             self.file.write('frequency='+str(frequency)+'\n')
             while time.time()-start_t<seconds:
                 self.file.write(self.__readIO(QTPY_BOOT_PIN))
                 # time.sleep(period)
-            self.file.close()
+        self.file.close()
         print("Done")
 
     def loopRecord():   # 
@@ -111,7 +112,7 @@ if __name__ =="__main__":
     COM_list=selectCOM()
     # iCOM=int(input())
     # seq=sequencer(COM_list[iCOM])
-    seq=sequencer(COM_list[1])
+    seq=sequencer(COM_list[0])
     # seq.readREG()
     # seq.writeREG()
     # x=input()
