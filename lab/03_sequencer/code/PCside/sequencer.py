@@ -13,13 +13,15 @@ from functions import selectCOM,mkdir
 # >            read last gpio pin 
 # b+value      set brightness 
 # #+seconds        start record num seconds
+# $+filename        play the record
 QTPY_BOOT_PIN=21
 
 class sequencer():
     def __init__(self,dev):
         print("init")
         try:
-            self.ser = serial.Serial(dev, 115200, timeout=0)
+            self.ser = serial.Serial(dev, 115200,timeout=0)
+            # self.ser = serial.Serial(dev, 115200)
         except Exception as e:
             print("COM can not open,Exception=",e)
         self.file=None
@@ -27,39 +29,48 @@ class sequencer():
     def readIO(self):
         self.__readIO(21)
 
+    def __setPin(self,pin):
+        s='p'+str(pin)
+        self.ser.write(s.encode('utf-8'))
+    def setPin(self,pin):
+        self.__setPin(pin)
+
+    def __writeIO(self,output=0):
+        s='>'+str(output)
+        self.ser.write(s.encode('utf-8'))
+        # self.ser.write('>'.encode('utf-8'))
+        # self.ser.write(str(output).encode('utf-8'))
+    
+    def writeIO(self,output):
+        self.__writeIO(output)
+        print(self.ser.read())
+
     def __readIO(self,pin):
-        def sendPin(__pin):
-            self.ser.write('>'.encode('utf-8')) # io read identifier
-            self.ser.write(str(__pin).encode('utf-8'))
-            self.ser.write(b'\n')   # scanf identifier
-        sendPin(pin)
+        self.ser.write(b'<') # io read identifier
         tmp=self.ser.read(2)
         if tmp==b'':
             return ""
-        print(tmp[1])
-        # print(type(tmp[1]))
-#
         if tmp[1]==49:
-            print("\t49")
             return '-'
         else:
-            print("\t48")
+            print(tmp[1])
             return '_'
-    # record at a least a few seconds of button input to your RP2040 (in RAM)
-    # time period and frequency
-    def record(self,seconds,frequency=200):   #
-        start_t=time.time()
+
+    # record at a least a few seconds of button input to your RP2040 (in RAM)   
+    def record(self,seconds,frequency=20):   #
         period = 1/frequency
-        s='p'+str(QTPY_BOOT_PIN)
-        self.ser.write(s.encode('utf-8'))
+        self.__setPin(QTPY_BOOT_PIN)
         filename= time.strftime("%m%d%H%M%S", time.localtime())  
         print(filename)
         with open('./records/'+filename+'.txt', 'w') as self.file:
-            self.file.write('frequency='+str(frequency)+'\n')
+            self.file.write(str(frequency)+'\n')
+            start_t=time.time()
             while time.time()-start_t<seconds:
+                smalltime= time.time()
                 self.file.write(self.__readIO(QTPY_BOOT_PIN))
-                # time.sleep(period)
-        self.file.close()
+                while time.time()-smalltime<period:
+                    continue
+        # self.file.close()
         print("Done")
 
     def loopRecord():   # 
@@ -68,43 +79,58 @@ class sequencer():
     def saveRecord(path):
         print("save")
 
-    # replay a recorded sequence on your NeoPixel
-    def playRecord():
-        print("replay")
+# 1107215852
 
-    # play a recording from your laptop
-    def playRecord(path):
-        print("play from laptop")
-    
+    # replay a recorded sequence on your NeoPixel
+    def playRecord(self,filename,pin = QTPY_BOOT_PIN):
+        starttime= time.time()
+        with open('./records/'+filename+'.txt', 'r') as f:
+            period = 1/int(f.readline())
+            print("period=",period)
+            all = f.read()
+            print("size=",len(all))
+            if all[0]=='-':
+                self.__writeIO(1)
+            else:
+                self.__writeIO(0) 
+            for i in range(1,len(all)):
+                # print(all[i])
+                smalltime=time.time()
+                if all[i]!=all[i-1]:
+                    if all[i]=='-':
+                        self.__writeIO(1)
+                        # self.__writeIO(1)   # write twice to make sure correctly write
+                    elif all[i]=='_':
+                        self.__writeIO(0) 
+                        # self.__writeIO(0)                   
+                while time.time()-smalltime<period:
+                    continue
+                
+                # time.sleep(period)
+
+        print("replay time=",time.time()-starttime)
+
+    def playloop(self,filename,pin = QTPY_BOOT_PIN):
+        while True:
+            self.playRecord(filename,pin)
+
     def readREG(self,address):
-        self.ser.write('r'.encode('utf-8'))
-        self.ser.write([0x50,0x00,0x00,0x00])
+        s= 'r'+address+'\n'
+        # self.ser.write('r'.encode('utf-8'))
+        # self.ser.write([0x50,0x00,0x00,0x00])
+        self.ser.write(s.encide('utf-8'))
         data=self.ser.readline()
         # self.ser.flushInput()
-        # for a in data:
-        #     print(a)
         print("read:")
         print(data)
+        
     def writeREG(self,address,value):
+        s='w'+address+'\n'+value+'\n'
         self.ser.write('w'.encode('utf-8'))
-        # self.ser.write([0x10,0x00,0x00,0x60])
-        self.ser.write(b'500000A0\n')
-        # self.ser.write(b'\n')
-        # self.ser.write([0x00,0x00,0x03,0x00])
-        self.ser.write(b'12340000\n')
+        # self.ser.write(b'500000A0\n')
+        # self.ser.write(b'12340000\n')
 
-        # self.ser.write(b'\n')
-        # data=self.ser.read(5)
-        data=self.ser.readline()
-        print("write")
-        print(data)
-        print(len(data))
-        data=self.ser.readline()
-        # print("write")
-        print(data)
-        print(len(data))
-
-
+        self.ser.write(s.encode('utf-8'))
 
 
 if __name__ =="__main__":
@@ -113,15 +139,22 @@ if __name__ =="__main__":
     # iCOM=int(input())
     # seq=sequencer(COM_list[iCOM])
     seq=sequencer(COM_list[0])
-    # seq.readREG()
-    # seq.writeREG()
-    # x=input()
-    # while True:
-    #     seq.readIO()
+
+    with open('./command.log', 'r') as f:
+        f.write("=====start=====\n")
 
     while True:
         command=input()
+        with open('./command.log', 'r') as f:
+            s=time.strftime("%m,%d, %H:%M:%S", time.localtime())+'\t'+command+'\n'
+            f.write("s")
         args= command.split(" ")
-        if args[0]=='#': # start recording
+        if args[0]=='#':             #  # seconds
             seq.record(int(args[1]))
+        elif args[0]=='$':           #  $ filename
+            seq.playRecord(args[1])
+        elif args[0]=='r':           #  r address(%08x)
+            seq.readREG(args[1])
+        elif args[0]=='w':           #  w address(%08x) value(%08x)
+            seq.writeREG(args[1],args[2])
 
