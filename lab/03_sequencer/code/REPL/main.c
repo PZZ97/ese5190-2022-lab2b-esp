@@ -11,6 +11,7 @@
 #define E_WRITE 'w'
 #define E_RGB   'c'
 #define E_READIO    '>'
+#define E_SETPIN 'p'
 
 // default read pin
 int Pin;
@@ -41,9 +42,8 @@ void funcRGB(){
     printf("v%08x",rgbVal);
 }
 void funcInitGpio(){
-    int Pin;
     scanf("%d",&Pin);
-    gpio_set_dir(Pin, GPIO_IN);
+    // gpio_set_dir(Pin, GPIO_IN);
 }
 void funcGpioRead(){
     int pin=0;  // must use type int (not uint_8) and %d in scanf
@@ -51,7 +51,8 @@ void funcGpioRead(){
     printf("o%d",gpio_get(pin));
 }
 void funcGpioReadDefault(){
-    gpio_get(Pin);
+    // gpio_get(Pin);
+    printf("o%d",gpio_get(pin));
 }
 // w+address+" "+value
 // r+address
@@ -87,7 +88,11 @@ int main() {
         else if(event==E_READIO){
             neopixel_set_rgb(0x00000f0f);   // 
             // if(ioreadFlag++==0)
-                funcGpioRead();
+                // funcGpioRead();
+            funcGpioReadDefault();
+        }
+        else if(event ==E_SETPIN){
+            funcInitGpio();
         }
 
 
