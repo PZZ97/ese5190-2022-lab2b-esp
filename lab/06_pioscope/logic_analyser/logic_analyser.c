@@ -24,9 +24,9 @@
 // Some logic to analyse:
 #include "hardware/structs/pwm.h"
 
-const uint CAPTURE_PIN_BASE = 16;   // the first pin number 
-const uint CAPTURE_PIN_COUNT = 2;   // total offset based on PIN_BASE
-const uint CAPTURE_N_SAMPLES = 96;  // total sample times of one pin 
+const uint CAPTURE_PIN_BASE = 16;   /* the first pin number */
+const uint CAPTURE_PIN_COUNT = 2;   /* total offset based on PIN_BASE*/
+const uint CAPTURE_N_SAMPLES = 96;  /* total sample times of one pin */
 
 static inline uint bits_packed_per_word(uint pin_count) {
     // If the number of pins to be sampled divides the shift register size, we
@@ -34,19 +34,23 @@ static inline uint bits_packed_per_word(uint pin_count) {
     // exactly reaches 32. If not, we have to push earlier, so we use the FIFO
     // a little less efficiently.
     const uint SHIFT_REG_WIDTH = 32;
+    /*not quite understand*/
     return SHIFT_REG_WIDTH - (SHIFT_REG_WIDTH % pin_count);
 }
 
 void logic_analyser_init(PIO pio, uint sm, uint pin_base, uint pin_count, float div) {
     // Load a program to capture n pins. This is just a single `in pins, n`
     // instruction with a wrap.
-    uint16_t capture_prog_instr = pio_encode_in(pio_pins, pin_count);
+    uint16_t capture_prog_instr = pio_encode_in(pio_pins, pin_count);   /*  => $ IN pio_pins pin_count
+                                                                            (pio_pins=0, source =PINS)
+                                                                            pin_count=2, shift 2bits to ISR 
+                                                                            datasheet 3.2.3.2 ISR  */
     struct pio_program capture_prog = {
             .instructions = &capture_prog_instr,
             .length = 1,
             .origin = -1
     };
-    uint offset = pio_add_program(pio, &capture_prog);
+    uint offset = pio_add_program(pio, &capture_prog);                  /*  Create the pio program */
 
     // Configure state machine to loop over this `in` instruction forever,
     // with autopush enabled.
@@ -57,6 +61,7 @@ void logic_analyser_init(PIO pio, uint sm, uint pin_base, uint pin_count, float 
     // Note that we may push at a < 32 bit threshold if pin_count does not
     // divide 32. We are using shift-to-right, so the sample data ends up
     // left-justified in the FIFO in this case, with some zeroes at the LSBs.
+                                                /* push_threshold */
     sm_config_set_in_shift(&c, true, true, bits_packed_per_word(pin_count));
     sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_RX);
     pio_sm_init(pio, sm, offset, &c);
@@ -140,7 +145,7 @@ int main() {
     gpio_set_function(CAPTURE_PIN_BASE, GPIO_FUNC_PWM);
     gpio_set_function(CAPTURE_PIN_BASE + 1, GPIO_FUNC_PWM);
     // Topmost value of 3: count from 0 to 3 and then wrap, so period is 4 cycles
-    pwm_hw->slice[0].top = 3;
+    pwm_hw->slice[0].top = 3;           /*equals wrap in pwm example, total period = top+1 cycles*/
     // Divide frequency by two to slow things down a little
     pwm_hw->slice[0].div = 4 << PWM_CH0_DIV_INT_LSB;
     // Set channel A to be high for 1 cycle each period (duty cycle 1/4) and
