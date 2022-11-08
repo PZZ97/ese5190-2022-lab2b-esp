@@ -9,10 +9,11 @@ from functions import selectCOM,mkdir
 # w+address+" "+value
 # r+address
 # c+value      set color   // PIO function
-# >+Pin        read gpio pin
-# >            read last gpio pin 
+# <+Pin        read gpio pin
+# <            read last gpio pin 
 # b+value      set brightness 
 # #+seconds        start record num seconds
+# p+Pin         Set read pins
 QTPY_BOOT_PIN=21
 
 class sequencer():
@@ -29,7 +30,7 @@ class sequencer():
 
     def __readIO(self,pin):
         def sendPin(__pin):
-            self.ser.write('>'.encode('utf-8')) # io read identifier
+            self.ser.write('<'.encode('utf-8')) # io read identifier
             self.ser.write(str(__pin).encode('utf-8'))
             self.ser.write(b'\n')   # scanf identifier
         sendPin(pin)
