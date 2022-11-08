@@ -3,7 +3,7 @@ import time
 import serial 
 import os
 import serial.tools.list_ports
-    
+from functions import selectCOM,mkdir
     # def 
 
 # w+address+" "+value
@@ -19,25 +19,47 @@ class sequencer():
     def __init__(self,dev):
         print("init")
         try:
-            self.ser = serial.Serial(dev, 115200, timeout=0.05)
+            self.ser = serial.Serial(dev, 115200, timeout=0)
         except Exception as e:
             print("COM can not open,Exception=",e)
+        self.file=None
 
-    def readIO(self,pin):
-        self.ser.write('>'.encode('utf-8'))
-        # self.ser.write(str(pin).encode('utf-8'))
-        self.ser.write(b'21\n')
-        # self.ser.write(b'500000A0\n')
+    def readIO(self):
+        self.__readIO(21)
 
-        # self.ser.write(21)
-        tmp=self.ser.readline()
-        print(tmp)
+    def __readIO(self,pin):
+        def sendPin(__pin):
+            self.ser.write('>'.encode('utf-8')) # io read identifier
+            self.ser.write(str(__pin).encode('utf-8'))
+            self.ser.write(b'\n')   # scanf identifier
+        sendPin(pin)
+        tmp=self.ser.read(2)
+        if tmp==b'':
+            return ""
+        print(tmp[1])
+        # print(type(tmp[1]))
+#
+        if tmp[1]==49:
+            print("\t49")
+            return '-'
+        else:
+            print("\t48")
+            return '_'
     # record at a least a few seconds of button input to your RP2040 (in RAM)
-    def record(seconds):   #
+    # time period and frequency
+    def record(self,seconds,frequency=200):   #
         start_t=time.time()
-
-        while time.time()-start_t<seconds:
-            print("record")
+        period = 1/frequency
+        s='p'+str(QTPY_BOOT_PIN)
+        self.ser.write(s.encode('utf-8'))
+        filename= time.strftime("%m%d%H%M%S", time.localtime())  
+        with open('./records/'+filename+'.txt', 'w') as self.file:
+            self.file.write('frequency='+str(frequency)+'\n')
+            while time.time()-start_t<seconds:
+                self.file.write(self.__readIO(QTPY_BOOT_PIN))
+                # time.sleep(period)
+            self.file.close()
+        print("Done")
 
     def loopRecord():   # 
         print("loop")   # loop the recording when play 
@@ -53,7 +75,7 @@ class sequencer():
     def playRecord(path):
         print("play from laptop")
     
-    def readREG(self):
+    def readREG(self,address):
         self.ser.write('r'.encode('utf-8'))
         self.ser.write([0x50,0x00,0x00,0x00])
         data=self.ser.readline()
@@ -62,7 +84,7 @@ class sequencer():
         #     print(a)
         print("read:")
         print(data)
-    def writeREG(self):
+    def writeREG(self,address,value):
         self.ser.write('w'.encode('utf-8'))
         # self.ser.write([0x10,0x00,0x00,0x60])
         self.ser.write(b'500000A0\n')
@@ -80,32 +102,25 @@ class sequencer():
         # print("write")
         print(data)
         print(len(data))
-def selectCOM():
-    l_com=[]
-    l_comde=[]
-    comlist= list(serial.tools.list_ports.comports())
-    for i in range(0,len(comlist)):
-        l_com.append(comlist[i].device)
-        l_comde.append( comlist[i].description)
-        print("[{}],\t{},\t{}".format(i, comlist[i].device, comlist[i].description))
-    return l_com
+
+
+
 
 if __name__ =="__main__":
+    mkdir() #create folders for recordings 
     COM_list=selectCOM()
     # iCOM=int(input())
     # seq=sequencer(COM_list[iCOM])
-    seq=sequencer(COM_list[0])
-    seq.readIO(21)
-    # seq.readIO(21)
+    seq=sequencer(COM_list[1])
     # seq.readREG()
     # seq.writeREG()
     # x=input()
-    while True:
-        seq.readIO(21)
-        time.sleep(0.5)
-    # seq.readREG()
-
     # while True:
-    #     command=input()
-    #     if command[0]=='#': # start recording
-    #         seq.record(int(command[1:]))
+    #     seq.readIO()
+
+    while True:
+        command=input()
+        args= command.split(" ")
+        if args[0]=='#': # start recording
+            seq.record(int(args[1]))
+
