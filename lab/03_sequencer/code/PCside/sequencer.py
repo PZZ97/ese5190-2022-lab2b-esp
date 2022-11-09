@@ -162,4 +162,10 @@ if __name__ =="__main__":
             seq.readREG(args[1])
         elif args[0]=='w':           #  w address(%08x) value(%08x)
             seq.writeREG(args[1],args[2])
+        elif args[0]=='p':
+            seq.setPin(args[1])
+        elif args[0]=='>':
+            seq.writeIO(args[1])
+        elif args[0]=='<':
+            seq.readIO(args[1])
 
