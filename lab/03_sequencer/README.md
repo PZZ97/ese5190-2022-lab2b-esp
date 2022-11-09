@@ -11,5 +11,19 @@ Create a 'sequencer' that allows you to record BOOT button presses and play them
 - include multiple I/O sources in a recording, and remap among the following:
     - inputs: BOOT button, console commands, register read/write commands
     - outputs: neopixel color, neopixel brightness, data over serial, register read/write commands
+-----
+# commands
+| functions |command |
+| :--| :--  |
+| record  |# \<seconds\>  <frequency(op)>|
+| replay | $ \<filename\> <frequency(op)>|
+| read address|r \<address(8bits)\>|
+| write address|w \<address(8bits)\>|
+|set I/O pin| p \<gpio\>|
+|Input gpio|< \<gpio>|
+|Output gpio|> \<gpio>|
 
+All recorded files are saved under `./records/`
+### Design considerations:
+for a easier way reading address via serial, I used `scanf("%08x",&addr)` instead of `getchar_nonblocking`, the drawback is it may introudce blocking time when reading from serial(not sure).
 
