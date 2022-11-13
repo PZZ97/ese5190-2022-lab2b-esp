@@ -2,4 +2,5 @@
 /lab/02_repl/REPL/build
 /lab/03_sequencer/code/REPL/build
 **/build/
+**/records/
 
