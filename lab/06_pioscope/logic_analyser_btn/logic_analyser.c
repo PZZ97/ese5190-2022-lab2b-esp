@@ -76,8 +76,8 @@ void logic_analyser_arm(PIO pio, uint sm, uint dma_chan, uint32_t *capture_buf, 
     dma_channel_config c = dma_channel_get_default_config(dma_chan);
     channel_config_set_read_increment(&c, false);
     channel_config_set_write_increment(&c, true);
-    channel_config_set_dreq(&c, pio_get_dreq(pio, sm, false));
-
+    channel_config_set_dreq(&c, pio_get_dreq(pio, sm, false));  //Return the DREQ to use for pacing transfers to/from a particular state machine FIFO.
+                                                    // bool is_tx= false
     dma_channel_configure(dma_chan, &c,
         capture_buf,        // Destination pointer
         &pio->rxf[sm],      // Source pointer

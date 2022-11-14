@@ -22,20 +22,18 @@
 #include "hardware/structs/bus_ctrl.h"
 // #include "adafruit_qtpy_rp2040.h" 
 // Some logic to analyse:
-#include "hardware/structs/pwm.h"
-
-const uint CAPTURE_PIN_BASE = 16;   /* the first pin number */
-const uint CAPTURE_PIN_COUNT = 2;   /* total offset based on PIN_BASE*/
-const uint CAPTURE_N_SAMPLES = 96;  /* total sample times of one pin */
+// #include "hardware/structs/pwm.h"
+#include "pico/binary_info.h"
+#include "hardware/i2c.h"
+const uint CAPTURE_PIN_BASE = 24;   /* the first pin number */
+const uint CAPTURE_PIN_COUNT = 2;   /* total number of pins based on PIN_BASE*/
+const uint CAPTURE_N_SAMPLES = 32*1;  /* total sample cycles of one pin */
 
 static inline uint bits_packed_per_word(uint pin_count) {
-    // If the number of pins to be sampled divides the shift register size, we
-    // can use the full SR and FIFO width, and push when the input shift count
-    // exactly reaches 32. If not, we have to push earlier, so we use the FIFO
-    // a little less efficiently.
     const uint SHIFT_REG_WIDTH = 32;
     /*not quite understand*/
-    return SHIFT_REG_WIDTH - (SHIFT_REG_WIDTH % pin_count);
+    //  32%2=0
+    return SHIFT_REG_WIDTH - (SHIFT_REG_WIDTH % (pin_count));
 }
 
 void logic_analyser_init(PIO pio, uint sm, uint pin_base, uint pin_count, float div) {
@@ -66,6 +64,34 @@ void logic_analyser_init(PIO pio, uint sm, uint pin_base, uint pin_count, float 
     sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_RX);
     pio_sm_init(pio, sm, offset, &c);
 }
+void out_timestamp(const uint32_t* buf,uint32_t buf_size_words,
+                        uint32_t* sda_timestamp, uint32_t sda_len,
+                        uint32_t* scl_timestamp, uint32_t scl_len){
+    uint32_t sda_count=0;
+    uint32_t scl_count=0;
+    int prev_sda=0;
+    int prev_scl=0;
+    uint32_t psda=0;
+    uint32_t pscl=0;
+    for(uint32_t i=0;i<buf_size_words;i++){
+        for(int j =0;j<32;j+=2){
+            if((buf>>j)&0x1!=prev_sda){
+                if(psda>=sda_len)break;
+                sda_timestamp[psda++]=sda_count;
+                prev_sda=!prev_sda;
+                printf("%d",sda_count);
+            }
+            if((buf>>(j+1))&0x1!=prev_scl){
+                if(pscl>=scl_len)break;
+                scl_timestamp[pscl++]=scl_count;
+                prev_scl=!prev_scl;
+                printf("\t%d",scl_count);
+            }
+            sda_count++;
+            scl_count++
+        }
+    }
+}
 
 void logic_analyser_arm(PIO pio, uint sm, uint dma_chan, uint32_t *capture_buf, size_t capture_size_words,
                         uint trigger_pin, bool trigger_level) {
@@ -78,15 +104,16 @@ void logic_analyser_arm(PIO pio, uint sm, uint dma_chan, uint32_t *capture_buf, 
     dma_channel_config c = dma_channel_get_default_config(dma_chan);
     channel_config_set_read_increment(&c, false);
     channel_config_set_write_increment(&c, true);
-    channel_config_set_dreq(&c, pio_get_dreq(pio, sm, false));
-
+    channel_config_set_dreq(&c, pio_get_dreq(pio, sm, false));  //Return the DREQ to use for pacing transfers to/from a particular state machine FIFO.
+                                                    // bool is_tx= false
     dma_channel_configure(dma_chan, &c,
         capture_buf,        // Destination pointer
         &pio->rxf[sm],      // Source pointer
         capture_size_words, // Number of transfers
         true                // Start immediately
     );
-    pio_sm_exec(pio, sm, pio_encode_wait_gpio(trigger_level, trigger_pin));
+
+    pio_sm_exec(pio, sm, pio_encode_wait_gpio(trigger_level, trigger_pin)); /* stall until the first up edge */
     pio_sm_set_enabled(pio, sm, true);
 }
 
@@ -109,19 +136,45 @@ void print_capture_buf(const uint32_t *buf, uint pin_base, uint pin_count, uint3
         }
         printf("\n");
     }
+    // for(int pin=0;pin<pin_count;pin++){
+        printf("%02d: ", 0 + pin_base);
+        for (int sample = 0; sample < n_samples; ++sample) {
+            // uint bit_index = pin + sample * pin_count;
+            // uint word_index = bit_index / record_size_bits;
+            // // Data is left-justified in each FIFO entry, hence the (32 - record_size_bits) offset
+            // uint word_mask = 1u << (bit_index % record_size_bits + 32 - record_size_bits);
+            // printf(buf[word_index] & word_mask ? "-" : "_");
+            printf("%x",buf[sample]);
+        }
+    // }
+    
 }
+
+#define QTPY_BOOT_PIN 21
 
 int main() {
     stdio_init_all();
+    // uint64_t
     while(stdio_usb_connected()!=true);
+
+    gpio_init(QTPY_BOOT_PIN);
+    gpio_set_dir(QTPY_BOOT_PIN, GPIO_IN);
+    gpio_init(CAPTURE_PIN_BASE);
+    gpio_init(CAPTURE_PIN_BASE+1);
     printf("PIO logic analyser example\n");
+    gpio_set_dir(CAPTURE_PIN_BASE, GPIO_IN);
+    gpio_set_dir(CAPTURE_PIN_BASE+1, GPIO_IN);
+    // gpio_pull_up(CAPTURE_PIN_BASE);
+    // gpio_pull_up(CAPTURE_PIN_BASE+1);
 
     // We're going to capture into a u32 buffer, for best DMA efficiency. Need
     // to be careful of rounding in case the number of pins being sampled
     // isn't a power of 2.
-    uint total_sample_bits = CAPTURE_N_SAMPLES * CAPTURE_PIN_COUNT; // 96*2
-    total_sample_bits += bits_packed_per_word(CAPTURE_PIN_COUNT) - 1;
-    uint buf_size_words = total_sample_bits / bits_packed_per_word(CAPTURE_PIN_COUNT);
+    uint total_sample_bits = CAPTURE_N_SAMPLES * CAPTURE_PIN_COUNT+31; // 96*2
+    // total_sample_bits += bits_packed_per_word(CAPTURE_PIN_COUNT) - 1;
+
+    uint buf_size_words = total_sample_bits /32;
+    printf("buf_size_words=%d\n",buf_size_words);
     uint32_t *capture_buf = malloc(buf_size_words * sizeof(uint32_t));
     hard_assert(capture_buf);
 
@@ -135,30 +188,29 @@ int main() {
     uint dma_chan = 0;
 
     logic_analyser_init(pio, sm, CAPTURE_PIN_BASE, CAPTURE_PIN_COUNT, 1.f);
+    while(true){
+        // printf("Arming trigger\n");
+        logic_analyser_arm(pio, sm, dma_chan, capture_buf, buf_size_words, CAPTURE_PIN_BASE, true);
 
-    printf("Arming trigger\n");
-    logic_analyser_arm(pio, sm, dma_chan, capture_buf, buf_size_words, CAPTURE_PIN_BASE, true);
+        // absolute_time_t abst = get_absolute_time(); // func to get timestamp
 
-    printf("Starting PWM example\n");
-    // PWM example: -----------------------------------------------------------
-    gpio_set_function(CAPTURE_PIN_BASE, GPIO_FUNC_PWM);
-    gpio_set_function(CAPTURE_PIN_BASE + 1, GPIO_FUNC_PWM);
-    // Topmost value of 3: count from 0 to 3 and then wrap, so period is 4 cycles
-    pwm_hw->slice[0].top = 3;           /*equals wrap in pwm example, total period = top+1 cycles*/
-    // Divide frequency by two to slow things down a little
-    pwm_hw->slice[0].div = 4 << PWM_CH0_DIV_INT_LSB;
-    // Set channel A to be high for 1 cycle each period (duty cycle 1/4) and
-    // channel B for 3 cycles (duty cycle 3/4)
-    pwm_hw->slice[0].cc =
-            (1 << PWM_CH0_CC_A_LSB) |
-            (3 << PWM_CH0_CC_B_LSB);
-    // Enable this PWM slice
-    pwm_hw->slice[0].csr = PWM_CH0_CSR_EN_BITS;
-    // ------------------------------------------------------------------------
+        while(gpio_get(QTPY_BOOT_PIN)>0);/*wait until press button*/
 
-    // The logic analyser should have started capturing as soon as it saw the
-    // first transition. Wait until the last sample comes in from the DMA.
-    dma_channel_wait_for_finish_blocking(dma_chan);
+        // printf("\n%lld\n",abst);
+        // The logic analyser should have started capturing as soon as it saw the
+        // first transition. Wait until the last sample comes in from the DMA.
+        dma_channel_wait_for_finish_blocking(dma_chan);
+        uint32_t sda_buf =malloc(sizeof(uint32_t)*32*10);
+        uint32_t scl_buf =malloc(sizeof(uint32_t)*32*10);
+        out_timestamp(capture_buf,buf_size_words,sda_buf,320,scl_buf,320);
+        // printf("\nSDA\n");
+        // for (int i = 0; i < buf_size_words; ++i) {
+        //     for(int j=0;j<32;j+=2){
+        //         // printf(capture_buf[i]>>j == 1? '-':'.');
+        //         printf("%c",capture_buf[i]&(0x01<<j)? '-':'_');
+        //     }    
+        // }
 
-    print_capture_buf(capture_buf, CAPTURE_PIN_BASE, CAPTURE_PIN_COUNT, CAPTURE_N_SAMPLES);
+    }
+    // print_capture_buf(capture_buf, CAPTURE_PIN_BASE, CAPTURE_PIN_COUNT, buf_size_words);
 }
