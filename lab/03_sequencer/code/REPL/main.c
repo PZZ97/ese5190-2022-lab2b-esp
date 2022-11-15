@@ -29,8 +29,6 @@ void funcWrite(){
     scanf("%08x",&address);
     scanf("%08x",&writeVal);
     register_write(address,writeVal);
-    // printf("g%08x\n",writeVal);
-    // printf("m%08x",address);
 }
 
 // neopixel_set_rgb()
