@@ -5,6 +5,7 @@
 #include "hardware/gpio.h"
 #include "register.h"
 #include "ws2812.pio.h" // pio0
+#include "hardware/dma.h"
 #define QTPY_BOOT_PIN 21
 
 #define E_READ 'r'
