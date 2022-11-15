@@ -27,7 +27,7 @@
 #include "hardware/i2c.h"
 const uint CAPTURE_PIN_BASE = 24;   /* the first pin number */
 const uint CAPTURE_PIN_COUNT = 2;   /* total number of pins based on PIN_BASE*/
-const uint CAPTURE_N_SAMPLES = 32*1;  /* total sample cycles of one pin */
+const uint CAPTURE_N_SAMPLES = 96*5;  /* total sample cycles of one pin */
 
 static inline uint bits_packed_per_word(uint pin_count) {
     const uint SHIFT_REG_WIDTH = 32;
@@ -67,28 +67,26 @@ void logic_analyser_init(PIO pio, uint sm, uint pin_base, uint pin_count, float 
 void out_timestamp(const uint32_t* buf,uint32_t buf_size_words,
                         uint32_t* sda_timestamp, uint32_t sda_len,
                         uint32_t* scl_timestamp, uint32_t scl_len){
-    uint32_t sda_count=0;
-    uint32_t scl_count=0;
+    uint32_t counter=0;
     int prev_sda=0;
     int prev_scl=0;
     uint32_t psda=0;
     uint32_t pscl=0;
     for(uint32_t i=0;i<buf_size_words;i++){
         for(int j =0;j<32;j+=2){
-            if((buf>>j)&0x1!=prev_sda){
+            if((buf[i]>>j)&0x1!=prev_sda){
                 if(psda>=sda_len)break;
-                sda_timestamp[psda++]=sda_count;
+                sda_timestamp[psda++]=counter;
                 prev_sda=!prev_sda;
-                printf("%d",sda_count);
+                printf("%d",counter);
             }
-            if((buf>>(j+1))&0x1!=prev_scl){
+            if((buf[i]>>(j+1))&0x1!=prev_scl){
                 if(pscl>=scl_len)break;
-                scl_timestamp[pscl++]=scl_count;
+                scl_timestamp[pscl++]=counter;
                 prev_scl=!prev_scl;
-                printf("\t%d",scl_count);
+                printf("\t%d",counter);
             }
-            sda_count++;
-            scl_count++
+            counter++;
         }
     }
 }
@@ -200,16 +198,17 @@ int main() {
         // The logic analyser should have started capturing as soon as it saw the
         // first transition. Wait until the last sample comes in from the DMA.
         dma_channel_wait_for_finish_blocking(dma_chan);
-        uint32_t sda_buf =malloc(sizeof(uint32_t)*32*10);
-        uint32_t scl_buf =malloc(sizeof(uint32_t)*32*10);
-        out_timestamp(capture_buf,buf_size_words,sda_buf,320,scl_buf,320);
-        // printf("\nSDA\n");
-        // for (int i = 0; i < buf_size_words; ++i) {
-        //     for(int j=0;j<32;j+=2){
-        //         // printf(capture_buf[i]>>j == 1? '-':'.');
-        //         printf("%c",capture_buf[i]&(0x01<<j)? '-':'_');
-        //     }    
-        // }
+        printf("\nSDA\n");
+        for (int i = 0; i < buf_size_words; ++i) {
+            for(int j=0;j<32;j+=2){
+                // printf(capture_buf[i]>>j == 1? '-':'.');
+                printf("%c",capture_buf[i]&(0x01<<j)? '-':'_');
+            }    
+        }
+        // uint32_t* sda_buf =malloc(sizeof(uint32_t)*32*10);
+        // uint32_t* scl_buf =malloc(sizeof(uint32_t)*32*10);
+        // out_timestamp(capture_buf,buf_size_words,sda_buf,320,scl_buf,320);
+
 
     }
     // print_capture_buf(capture_buf, CAPTURE_PIN_BASE, CAPTURE_PIN_COUNT, buf_size_words);
