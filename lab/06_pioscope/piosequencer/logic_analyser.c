@@ -27,7 +27,7 @@
 #include "hardware/i2c.h"
 const uint CAPTURE_PIN_BASE = 24;   /* the first pin number */
 const uint CAPTURE_PIN_COUNT = 2;   /* total number of pins based on PIN_BASE*/
-const uint CAPTURE_N_SAMPLES = 96*5;  /* total sample cycles of one pin */
+const uint CAPTURE_N_SAMPLES = 32*3;  /* total sample cycles of one pin */
 
 static inline uint bits_packed_per_word(uint pin_count) {
     const uint SHIFT_REG_WIDTH = 32;
@@ -64,32 +64,31 @@ void logic_analyser_init(PIO pio, uint sm, uint pin_base, uint pin_count, float 
     sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_RX);
     pio_sm_init(pio, sm, offset, &c);
 }
-void out_timestamp(const uint32_t* buf,uint32_t buf_size_words,
-                        uint32_t* sda_timestamp, uint32_t sda_len,
-                        uint32_t* scl_timestamp, uint32_t scl_len){
-    uint32_t counter=0;
-    int prev_sda=0;
-    int prev_scl=0;
-    uint32_t psda=0;
-    uint32_t pscl=0;
-    for(uint32_t i=0;i<buf_size_words;i++){
-        for(int j =0;j<32;j+=2){
-            if((buf[i]>>j)&0x1!=prev_sda){
-                if(psda>=sda_len)break;
-                sda_timestamp[psda++]=counter;
-                prev_sda=!prev_sda;
-                printf("%d",counter);
-            }
-            if((buf[i]>>(j+1))&0x1!=prev_scl){
-                if(pscl>=scl_len)break;
-                scl_timestamp[pscl++]=counter;
-                prev_scl=!prev_scl;
-                printf("\t%d",counter);
-            }
-            counter++;
-        }
-    }
-}
+// void out_timestamp(const uint32_t* buf, uint32_t buf_size_words, uint32_t *counter_){
+//     uint32_t counter=*counter_;
+//     int prev_sda=buf[0]&0X01;
+//     int prev_scl=buf[0]&0X02>>1;
+//     printf("\nout_timestamp1");
+//     for(uint32_t i=0;i<buf_size_words;i++){
+//         for(int j =30;j>=0;j-=2){
+//             if((buf[i]>>j)&0x1!=prev_sda){
+//                 // if(psda>=sda_len)break;
+//                 // sda_timestamp[psda++]=counter;
+//                 prev_sda=!prev_sda;
+//                 printf("D:%d,",counter);
+//             }
+//             if((buf[i]>>(j+1))&0x1!=prev_scl){
+//                 // if(pscl>=scl_len)break;
+//                 // scl_timestamp[pscl++]=counter;
+//                 prev_scl=!prev_scl;
+//                 printf("\tC:%d,",counter);
+//             }
+//             counter++;
+//         }
+//     }
+//     *counter_=counter;
+//     printf("\nout_timestamp");
+// }
 
 void logic_analyser_arm(PIO pio, uint sm, uint dma_chan, uint32_t *capture_buf, size_t capture_size_words,
                         uint trigger_pin, bool trigger_level) {
@@ -184,7 +183,9 @@ int main() {
     PIO pio = pio0;
     uint sm = 0;
     uint dma_chan = 0;
-
+    uint32_t counter=0;
+    uint32_t prev_sda=0;
+    uint32_t prev_scl=0;
     logic_analyser_init(pio, sm, CAPTURE_PIN_BASE, CAPTURE_PIN_COUNT, 1.f);
     while(true){
         // printf("Arming trigger\n");
@@ -202,14 +203,57 @@ int main() {
         for (int i = 0; i < buf_size_words; ++i) {
             for(int j=0;j<32;j+=2){
                 // printf(capture_buf[i]>>j == 1? '-':'.');
-                printf("%c",capture_buf[i]&(0x01<<j)? '-':'_');
+                // printf("%c",capture_buf[i]&(0x01<<j)? '-':'_');
+                printf("%c",(capture_buf[i]>>j)&0x01 ? '-':'_');
             }    
+            printf(",") ;
         }
-        // uint32_t* sda_buf =malloc(sizeof(uint32_t)*32*10);
-        // uint32_t* scl_buf =malloc(sizeof(uint32_t)*32*10);
-        // out_timestamp(capture_buf,buf_size_words,sda_buf,320,scl_buf,320);
+        printf("\nSCL\n");
+        for (int i = 0; i < buf_size_words; ++i) {
+            for(int j=1;j<32;j+=2){
+                // printf(capture_buf[i]>>j == 1? '-':'.');
+                // printf("%c",capture_buf[i]&(0x01<<j)? '-':'_');
+                printf("%c",(capture_buf[i]>>j)&0x01 ? '-':'_');
+            }   
+            printf(",") ;
+        }
 
-
+        // printf("\n");
+        // for(uint32_t i=0;i<buf_size_words;i++){
+        //     for(int j=0;j<32;j+=2)
+        //     printf("%d",(capture_buf[i]>>j)&0x1);
+        //     printf("|");
+            
+        // }
+        // printf("\n");
+        // for(uint32_t i=0;i<buf_size_words;i++){
+        //     for(int j=1;j<32;j+=2)
+        //     printf("%d",(capture_buf[i]>>j)&0x1);
+        //     printf("|");
+        // }
+        uint32_t prev_counter=counter;
+        printf("SDA\n");
+        for(uint32_t i=0;i<buf_size_words;i++){
+            for(int j=0;j<32;j+=2){
+                if((capture_buf[i]>>j)&0x01^prev_sda){
+                    prev_sda=!prev_sda;
+                    printf("SDA:%d,",counter);
+                    printf(",%d\n",prev_sda);
+                }
+                counter++;
+            }
+        }
+        counter=prev_counter;
+        printf("SCL\n");
+        for(uint32_t i=0;i<buf_size_words;i++){
+            for(int j=1;j<32;j+=2){
+                if((capture_buf[i]>>j)&0x01^prev_scl){
+                    prev_scl=!prev_scl;
+                    printf("\tSCL:%d,",counter);
+                    printf(",%d\n",prev_scl);
+                }
+                counter++;
+            }
+        }
     }
-    // print_capture_buf(capture_buf, CAPTURE_PIN_BASE, CAPTURE_PIN_COUNT, buf_size_words);
 }
