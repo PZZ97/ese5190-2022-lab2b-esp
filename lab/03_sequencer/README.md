@@ -18,12 +18,17 @@ Create a 'sequencer' that allows you to record BOOT button presses and play them
 | record  |# \<seconds\>  <frequency(op)>|
 | replay | $ \<filename\> <frequency(op)>|
 | read address|r \<address(8bits)\>|
-| write address|w \<address(8bits)\>|
-|set I/O pin| p \<gpio\>|
+| write address|w \<address(8bits)\>\<value>|
+<!-- |set I/O pin| p \<gpio\>| -->
 |Input gpio|< \<gpio>|
 |Output gpio|> \<gpio>|
 
-All recorded files are saved under `./records/`
+\* All recorded files are saved under `./records/`<br>
+\* `filename` in `./records/1115165839.txt` is just `1115165839`<br>
+\* file also records the sampling frequency. Without adjusting \<frequency>, REPL will replay with the recorded frequency.
 ### Design considerations:
 for a easier way reading address via serial, I used `scanf("%08x",&addr)` instead of `getchar_nonblocking`, the drawback is it may introudce blocking time when reading from serial(not sure).
+
+---
+## Output demo is under `./code/PCside`
 
