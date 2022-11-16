@@ -97,10 +97,12 @@ class sequencer():
     def playRecord(self,filename,fre= 0,pin = QTPY_BOOT_PIN):
         starttime= time.time()
         with open('./records/'+filename+'.txt', 'r') as f:
-            period = 1/int(fre)
+            period
             if fre==0:
                 period = 1/int(f.readline())
-            
+            else:
+                period = 1/int(fre)
+
             print("period=",period)
             all = f.read()
             print("size=",len(all))

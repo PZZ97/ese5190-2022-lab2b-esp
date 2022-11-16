@@ -100,7 +100,7 @@ void PIO_init(PIO pio, uint sm, uint pin_base,  float div) {
     int push_threshold_bit =1;
     sm_config_set_in_shift(&c, true, true, push_threshold_bit);
     sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_RX);
-    pio_sm_init(pio, sm, offset, &c);
+    // pio_sm_init(pio, sm, offset, &c);
 }
 
 // void gpio_pio_read(PIO pio, uint sm, uint dma_chan, uint32_t *read_buf,uint32_t pin) {
