@@ -11,7 +11,7 @@ pico_generate_pio_header(flashlight ${CMAKE_CURRENT_LIST_DIR}/ws2812.pio OUTPUT_
 target_sources(flashlight PRIVATE main.c neopixel.c) # CMAKE -> C (compiler)
 # target_sources(flashlight PRIVATE flashlight.c neopixel.c) # CMAKE -> C (compiler)
 
-target_link_libraries(flashlight PRIVATE pico_stdlib hardware_pio hardware_dma) # CMAKE -> C (linker)
+target_link_libraries(flashlight PRIVATE pico_stdlib hardware_pio hardware_dma ) # CMAKE -> C (linker)
 
 pico_enable_stdio_usb(flashlight 1) # PICO SDK (USB)
 pico_enable_stdio_uart(flashlight 0) # PICO SDK (USB)
