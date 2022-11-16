@@ -145,12 +145,12 @@ if __name__ =="__main__":
     # seq=sequencer(COM_list[iCOM])
     seq=sequencer(COM_list[0])
 
-    with open('./command.log', 'r') as f:
+    with open('./command.log', 'w') as f:
         f.write("=====start=====\n")
 
     while True:
         command=input()
-        with open('./command.log', 'r') as f:
+        with open('./command.log', 'w') as f:
             s=time.strftime("%m,%d, %H:%M:%S", time.localtime())+'\t'+command+'\n'
             f.write("s")
         args= command.split(" ")
