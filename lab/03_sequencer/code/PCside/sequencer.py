@@ -169,9 +169,9 @@ if __name__ =="__main__":
             f.write("s")
         args= command.split(" ")
         if args[0]=='#':             #  # seconds
-            if len(args==2):
+            if len(args)==2:
                 seq.record(int(args[1]))
-            elif  len(args==3):
+            elif  len(args)==3:
                 seq.record(int(args[1]),int(args[2]))
 
         elif args[0]=='$':           #  $ filename
