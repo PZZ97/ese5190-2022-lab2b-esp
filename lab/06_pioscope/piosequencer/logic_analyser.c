@@ -64,31 +64,6 @@ void logic_analyser_init(PIO pio, uint sm, uint pin_base, uint pin_count, float 
     sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_RX);
     pio_sm_init(pio, sm, offset, &c);
 }
-// void out_timestamp(const uint32_t* buf, uint32_t buf_size_words, uint32_t *counter_){
-//     uint32_t counter=*counter_;
-//     int prev_sda=buf[0]&0X01;
-//     int prev_scl=buf[0]&0X02>>1;
-//     printf("\nout_timestamp1");
-//     for(uint32_t i=0;i<buf_size_words;i++){
-//         for(int j =30;j>=0;j-=2){
-//             if((buf[i]>>j)&0x1!=prev_sda){
-//                 // if(psda>=sda_len)break;
-//                 // sda_timestamp[psda++]=counter;
-//                 prev_sda=!prev_sda;
-//                 printf("D:%d,",counter);
-//             }
-//             if((buf[i]>>(j+1))&0x1!=prev_scl){
-//                 // if(pscl>=scl_len)break;
-//                 // scl_timestamp[pscl++]=counter;
-//                 prev_scl=!prev_scl;
-//                 printf("\tC:%d,",counter);
-//             }
-//             counter++;
-//         }
-//     }
-//     *counter_=counter;
-//     printf("\nout_timestamp");
-// }
 
 void logic_analyser_arm(PIO pio, uint sm, uint dma_chan, uint32_t *capture_buf, size_t capture_size_words,
                         uint trigger_pin, bool trigger_level) {
@@ -133,18 +108,6 @@ void print_capture_buf(const uint32_t *buf, uint pin_base, uint pin_count, uint3
         }
         printf("\n");
     }
-    // for(int pin=0;pin<pin_count;pin++){
-        printf("%02d: ", 0 + pin_base);
-        for (int sample = 0; sample < n_samples; ++sample) {
-            // uint bit_index = pin + sample * pin_count;
-            // uint word_index = bit_index / record_size_bits;
-            // // Data is left-justified in each FIFO entry, hence the (32 - record_size_bits) offset
-            // uint word_mask = 1u << (bit_index % record_size_bits + 32 - record_size_bits);
-            // printf(buf[word_index] & word_mask ? "-" : "_");
-            printf("%x",buf[sample]);
-        }
-    // }
-    
 }
 
 #define QTPY_BOOT_PIN 21
@@ -167,12 +130,10 @@ int main() {
     // We're going to capture into a u32 buffer, for best DMA efficiency. Need
     // to be careful of rounding in case the number of pins being sampled
     // isn't a power of 2.
-    uint total_sample_bits = CAPTURE_N_SAMPLES * CAPTURE_PIN_COUNT+31; // 96*2
-    // total_sample_bits += bits_packed_per_word(CAPTURE_PIN_COUNT) - 1;
-
-    uint buf_size_words = total_sample_bits /32;
-    printf("buf_size_words=%d\n",buf_size_words);
-    uint32_t *capture_buf = malloc(buf_size_words * sizeof(uint32_t));
+   uint total_sample_bits = CAPTURE_N_SAMPLES * CAPTURE_PIN_COUNT;
+    total_sample_bits += bits_packed_per_word(CAPTURE_PIN_COUNT) - 1;
+    uint buf_size_words = total_sample_bits / bits_packed_per_word(CAPTURE_PIN_COUNT);
+    uint32_t * capture_buf = malloc(buf_size_words * sizeof(uint32_t));
     hard_assert(capture_buf);
 
     // Grant high bus priority to the DMA, so it can shove the processors out
@@ -186,14 +147,14 @@ int main() {
     uint32_t counter=0;
     uint32_t prev_sda=0;
     uint32_t prev_scl=0;
-    logic_analyser_init(pio, sm, CAPTURE_PIN_BASE, CAPTURE_PIN_COUNT, 1.f);
+    logic_analyser_init(pio, sm, CAPTURE_PIN_BASE, CAPTURE_PIN_COUNT, 65535.f);
     while(true){
         // printf("Arming trigger\n");
-        logic_analyser_arm(pio, sm, dma_chan, capture_buf, buf_size_words, CAPTURE_PIN_BASE, true);
 
         // absolute_time_t abst = get_absolute_time(); // func to get timestamp
 
         while(gpio_get(QTPY_BOOT_PIN)>0);/*wait until press button*/
+        logic_analyser_arm(pio, sm, dma_chan, capture_buf, buf_size_words, QTPY_BOOT_PIN, true);
 
         // printf("\n%lld\n",abst);
         // The logic analyser should have started capturing as soon as it saw the
@@ -218,19 +179,7 @@ int main() {
             printf(",") ;
         }
 
-        // printf("\n");
-        // for(uint32_t i=0;i<buf_size_words;i++){
-        //     for(int j=0;j<32;j+=2)
-        //     printf("%d",(capture_buf[i]>>j)&0x1);
-        //     printf("|");
-            
-        // }
-        // printf("\n");
-        // for(uint32_t i=0;i<buf_size_words;i++){
-        //     for(int j=1;j<32;j+=2)
-        //     printf("%d",(capture_buf[i]>>j)&0x1);
-        //     printf("|");
-        // }
+        print_capture_buf(capture_buf, CAPTURE_PIN_BASE, CAPTURE_PIN_COUNT, CAPTURE_N_SAMPLES);
         uint32_t prev_counter=counter;
         printf("SDA\n");
         for(uint32_t i=0;i<buf_size_words;i++){
@@ -255,5 +204,6 @@ int main() {
                 counter++;
             }
         }
+        sleep_ms(10);
     }
 }
